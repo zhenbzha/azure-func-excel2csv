@@ -1,0 +1,1 @@
+Currently in Azure function, you can only use python 3.6.x, so you need to activate it: .\.env\Scripts\activate
