@@ -2,13 +2,12 @@ import json
 import logging
 
 import azure.functions as func
+from azure.keyvault import KeyVaultClient
 from azure.storage.blob import BlockBlobService
+from msrestazure.azure_active_directory import MSIAuthentication
 
 from .conversion.excel2csv import Excel2Csv
 
-from azure.keyvault import KeyVaultClient
-from msrestazure.azure_active_directory import MSIAuthentication
- 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     credentials = MSIAuthentication(resource='https://vault.azure.net')

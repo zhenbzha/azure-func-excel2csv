@@ -13,9 +13,7 @@ class File:
 
 class Excel2Csv:
     def __init__(self, block_blob_service):
-        self.block_blob_service = block_blob_service                
-        self.container_name = 'xml-source'
-        self.converted_csv_container_name = 'converted-csv'
+        self.block_blob_service = block_blob_service             
         self.downloaded_dir = os.getcwd() + "\\downloadedFromBlob\\"
 
     def convert(self, excel_file, csv_file_base_path):
@@ -33,32 +31,32 @@ class Excel2Csv:
         worksheet = workbook.sheet_by_name(sheet_name)
         csv_file_name = sheet_name.lower().replace(" - ", "_").replace(" ","_") + '.csv'
         csv_file_full_path = csv_file_base_path + csv_file_name
-        csvfile = open(csv_file_full_path, 'w', encoding='utf8')
-        writetocsv = csv.writer(csvfile, quoting = csv.QUOTE_ALL)
-        for rownum in range(worksheet.nrows):
-            writetocsv.writerow(worksheet.row_values(rownum))
-        csvfile.close()
+        csv_file = open(csv_file_full_path, 'w', encoding='utf8')
+        write_to_csv = csv.writer(csv_file, quoting = csv.QUOTE_ALL)
+        for row_num in range(worksheet.nrows):
+            write_to_csv.writerow(worksheet.row_values(row_num))
+        csv_file.close()
         return File(csv_file_name, csv_file_full_path)
 
-    def convert_and_upload(self):
-        generator = self.block_blob_service.list_blobs(self.container_name)
+    def convert_and_upload(self, source_container = 'xml-source', dest_container = 'converted-csv'):
+        generator = self.block_blob_service.list_blobs(source_container)
         for blob in generator:
-            downloaded_excel = self.download(blob.name)
+            downloaded_excel = self.download(source_container, blob.name)
             # conversion
             csv_files = self.convert(excel_file = downloaded_excel.filename, csv_file_base_path = downloaded_excel.filepath)     
 
-            self.upload(csv_files)
+            self.upload(dest_container, csv_files)
         
-    def download(self, blob_name):
+    def download(self, source_container, blob_name):
         if not os.path.exists(self.downloaded_dir):
             os.makedirs(self.downloaded_dir)
 
         downloaded_file = self.downloaded_dir + blob_name
         # download excel from blob
-        self.block_blob_service.get_blob_to_path(self.container_name, blob_name, downloaded_file)
+        self.block_blob_service.get_blob_to_path(source_container, blob_name, downloaded_file)
 
         return File(downloaded_file, self.downloaded_dir)
 
-    def upload(self, csv_files):
+    def upload(self, dest_container, csv_files):
         for csv_file in csv_files:
-            self.block_blob_service.create_blob_from_path(self.converted_csv_container_name, csv_file.filename, csv_file.filepath)
+            self.block_blob_service.create_blob_from_path(dest_container, csv_file.filename, csv_file.filepath)

@@ -1,1 +1,5 @@
 Currently in Azure function, you can only use python 3.6.x, so you need to activate it: .\.env\Scripts\activate
+https://r-vm.com/python-on-azure-functions
+
+func azure functionapp publish zhenzh-python-func --build-native-deps
+--build-native-deps is required for some dependencies
