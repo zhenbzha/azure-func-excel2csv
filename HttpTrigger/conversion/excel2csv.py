@@ -37,13 +37,17 @@ class Excel2Csv:
         csv_file.close()
         return File(csv_file_name, csv_file_full_path)
 
-    def convert_and_upload(self, source_container = 'excel-source', dest_container = 'converted-csv'):
+    def convert_and_upload(self, source_container, dest_container):
         generator = self.block_blob_service.list_blobs(source_container)
+        
         for blob in generator:
-            downloaded_excel = self.download(source_container, blob.name)
-            # conversion
-            csv_files = self.convert(excel_file = downloaded_excel.filename, csv_file_base_path = downloaded_excel.filepath)     
-            self.upload(dest_container, csv_files)
+            self.convert_and_upload_blob(source_container, dest_container, blob.name)
+
+    def convert_and_upload_blob(self, source_container, dest_container, blob_name):
+        downloaded_excel = self.download(source_container, blob_name)
+        # conversion
+        csv_files = self.convert(excel_file = downloaded_excel.filename, csv_file_base_path = downloaded_excel.filepath)     
+        self.upload(dest_container, csv_files)
         
     def download(self, source_container, blob_name):
         if not os.path.exists(self.downloaded_dir):
