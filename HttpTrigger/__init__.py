@@ -14,7 +14,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     req_body = req.get_json()
     source_container = req_body.get("source_container")
     source_blob_name = req_body.get("source_blob")
-    destination_container = req_body.get("destination_container")
+    dest_folder = req_body.get("dest_folder")
+    dest_container = req_body.get("dest_container")
 
     credentials = MSIAuthentication(resource='https://vault.azure.net')
     kvclient = KeyVaultClient(credentials)
@@ -22,9 +23,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
     converter = Excel2Csv(BlockBlobService(account_name='zhenzhadfblobsource', account_key=key))
 
-    if source_blob_name is None:
-        converter.convert_and_upload("excel-source", "converted-csv")    
+    if source_blob_name is None:        
+        converter.convert_and_upload(source_container, dest_container, "raw", "curated")
     else:
-        converter.convert_and_upload_blob("excel-source", "converted-csv", source_blob_name)     
+        converter.convert_and_upload_blob("apachelog-analysis", "apachelog-analysis", source_blob_name, dest_folder)     
     
     return json.dumps({"result": "Conversion Finished!"})

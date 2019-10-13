@@ -37,27 +37,44 @@ class Excel2Csv:
         csv_file.close()
         return File(csv_file_name, csv_file_full_path)
 
-    def convert_and_upload(self, source_container, dest_container):
+    def convert_and_upload(self, source_container, dest_container, source_folder, dest_folder):
         generator = self.block_blob_service.list_blobs(source_container)
         
         for blob in generator:
-            self.convert_and_upload_blob(source_container, dest_container, blob.name)
 
-    def convert_and_upload_blob(self, source_container, dest_container, blob_name):
+            print("{}".format(blob.name))
+            #check if the path contains a folder structure, create the folder structure
+            if "/" in "{}".format(blob.name):
+                print("there is a path in this blob")
+                head, tail = os.path.split("{}".format(blob.name))
+                print(head)
+                print(tail)     
+                # todo: handle nested directories
+                if head == source_folder:
+                    self.convert_and_upload_blob(source_container, dest_container, blob.name, dest_folder)
+            else:
+                self.convert_and_upload_blob(source_container, dest_container, blob.name, dest_folder)           
+
+    def convert_and_upload_blob(self, source_container, dest_container, blob_name, dest_folder):
         downloaded_excel = self.download(source_container, blob_name)
         # conversion
         csv_files = self.convert(excel_file = downloaded_excel.filename, csv_file_base_path = downloaded_excel.filepath)     
-        self.upload(dest_container, csv_files)
+        self.upload(dest_container, csv_files, dest_folder)
         
     def download(self, source_container, blob_name):
+        head, tail = os.path.split("{}".format(blob_name))
+        
         if not os.path.exists(self.downloaded_dir):
             os.makedirs(self.downloaded_dir)
 
-        downloaded_file = self.downloaded_dir + blob_name
+        downloaded_file = self.downloaded_dir + tail
         # download excel from blob
+        print("source container" + source_container)
+        print("blob name: " + blob_name)
+        print("downloaded file:" + downloaded_file)
         self.block_blob_service.get_blob_to_path(source_container, blob_name, downloaded_file)
         return File(downloaded_file, self.downloaded_dir)
 
-    def upload(self, dest_container, csv_files):
+    def upload(self, dest_container, csv_files, dest_folder):
         for csv_file in csv_files:
-            self.block_blob_service.create_blob_from_path(dest_container, csv_file.filename, csv_file.filepath)
+            self.block_blob_service.create_blob_from_path(dest_container, dest_folder + "/"+csv_file.filename, csv_file.filepath)
