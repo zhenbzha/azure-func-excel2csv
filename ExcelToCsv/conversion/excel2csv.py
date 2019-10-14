@@ -69,9 +69,6 @@ class Excel2Csv:
 
         downloaded_file = self.downloaded_dir + tail
         # download excel from blob
-        print("source container" + source_container)
-        print("blob name: " + blob_name)
-        print("downloaded file:" + downloaded_file)
         self.block_blob_service.get_blob_to_path(source_container, blob_name, downloaded_file)
         return File(downloaded_file, self.downloaded_dir)
 
